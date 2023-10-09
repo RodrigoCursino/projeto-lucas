@@ -21,6 +21,7 @@
       <b-field class="column align-button">
         <b-button type="is-primary"
                   size="is-small"
+                  @click="showModal=!showModal"
         >
           Cadatrar OS
         </b-button>
@@ -117,13 +118,32 @@
                     </div>
                 </article>
             </template>
-    </b-table>
-  </div>
+        </b-table>
+        <b-modal
+            v-model="showModal"
+            has-modal-card
+            trap-focus
+            scroll="clip"
+            size="is-medium"
+            :on-cancel="clearForm()"
+            :destroy-on-hide="false"
+            aria-role="dialog"
+            aria-label="Example Modal"
+            close-button-aria-label="Close"
+            aria-modal>
+            <template #default="props">
+                <FormAberturaOs v-bind="formOs" 
+                                @save="salvar()"
+                               @close="props.close"/>
+            </template>
+        </b-modal>
+      </div>
 </template>
 
 <script>
 import { PaginationMixin } from '@/mixins/paginationMixin.js'
-import orderBy from 'lodash/orderBy'
+import FormAberturaOs      from '@/components/abertura-os/FormAberturaOs'
+import {orderBy, cloneDeep} from 'lodash'
 const dataSource = [
   { 
    'uuid': 1,
@@ -174,8 +194,12 @@ const dataSource = [
    'data_criacao': '2023-10-05 17:23:48'
   }
 ]
+  import FormOs from '@/components/abertura-os/FormOs.js'
   export default { 
     mixins: [PaginationMixin],
+      components: {
+        FormAberturaOs
+      },
       computed: {
         DataList() {
           return this.filterDataPagination(this.filterDataListBySearch(this.data))
@@ -183,6 +207,8 @@ const dataSource = [
       },
       data() {
           return {
+            formOs: new FormOs({}),
+            showModal: false,
             filter: '',
             perPage: 5,
             activeOnly: false,
@@ -214,10 +240,16 @@ const dataSource = [
       },
       methods: {
         editar(row) {
-          console.info(row)
+          this.formOs = new FormOs(row)
+          this.showModal = true
         },  
-        novo(row) {
-          console.info(row)
+        salvar() {
+          console.info(this.formOs)
+          this.showModal = false
+          this.data.push(cloneDeep(this.formOs))
+        },  
+        clearForm() {
+          this.formOs = new FormOs({})
         },  
         resetPriority(){
           this.$refs.multiSortTable.resetMultiSorting()
